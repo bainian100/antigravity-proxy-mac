@@ -1,0 +1,22 @@
+# 修复前：Antigravity language_server 进程的网络连接（节选）
+# 关键证据：同一进程同时有"走代理 ESTABLISHED"和"直连 SYN_SENT"两类
+# 抹掉了具体 PID、端口号、本机 IP
+
+COMMAND   PID  USER   FD   TYPE   DEVICE   NODE NAME
+language_  XX  user   ?u   IPv4   ...      TCP localhost:XXXXX (LISTEN)              ← 自己监听的服务端口
+
+# 走代理的连接（健康）
+language_  XX  user   ?u   IPv4   ...      TCP localhost:XXXXX->localhost:10808 (ESTABLISHED)
+language_  XX  user   ?u   IPv4   ...      TCP localhost:XXXXX->localhost:10808 (ESTABLISHED)
+
+# 直连 Google 的连接（被 GFW 截，超时）
+language_  XX  user   ?u   IPv4   ...      TCP 192.168.x.x:XXXXX->pnseab-aa-in-f10.1e100.net:https (SYN_SENT)
+language_  XX  user   ?u   IPv4   ...      TCP 192.168.x.x:XXXXX->pnseab-aa-in-f10.1e100.net:https (SYN_SENT)
+language_  XX  user   ?u   IPv4   ...      TCP 192.168.x.x:XXXXX->pnseab-aa-in-f10.1e100.net:https (SYN_SENT)
+language_  XX  user   ?u   IPv4   ...      TCP 192.168.x.x:XXXXX->pnseaa-ap-in-f10.1e100.net:https (SYN_SENT)
+language_  XX  user   ?u   IPv4   ...      TCP 192.168.x.x:XXXXX->pnseaa-ap-in-f10.1e100.net:https (SYN_SENT)
+language_  XX  user   ?u   IPv4   ...      TCP 192.168.x.x:XXXXX->pnseaa-ap-in-f10.1e100.net:https (SYN_SENT)
+
+# *.1e100.net = Google 的 CDN 反查 PTR
+# SYN_SENT = TCP SYN 包发出去了但收不到 SYN-ACK，被 GFW 路由阻断
+# 10 秒后这些连接全部超时，loadCodeAssist 失败

@@ -1,0 +1,30 @@
+# 修复后的 language_server.log（节选）
+# 来源: ~/Library/Logs/Antigravity/language_server.log
+# 抹掉了 PID、CSRF token、trace ID
+
+I0525 06:44:43.956733 PID server.go:1291] Starting language server process with pid PID
+I0525 06:44:43.956980 PID server.go:328]  Setting GOMAXPROCS to 4
+I0525 06:44:43.957243 PID server.go:471]  Language server will attempt to listen on host localhost
+I0525 06:44:43.958300 PID server.go:485]  Language server listening on random port at XXXXX for HTTPS (gRPC)
+I0525 06:44:43.958731 PID server.go:492]  Language server listening on random port at XXXXX for HTTP
+I0525 06:44:47.620637 PID auth_provider.go:546] [AuthProvider] SetProjectID called with projectID: ""
+I0525 06:44:47.620682 PID auth_provider.go:554] [AuthProvider] SetLocation called with location: ""
+W0525 06:44:47.631529 PID launchmanager.go:68] Entering local chrome mode! ...
+
+I0525 06:44:49.683214 PID http_helpers.go:182] URL: https://cloudcode-pa.googleapis.com/v1internal:loadCodeAssist Trace: ...
+I0525 06:44:50.564907 PID http_helpers.go:182] URL: https://cloudcode-pa.googleapis.com/v1internal:loadCodeAssist Trace: ...
+E0525 06:44:50.637767 PID log.go:398] WaitForReady failed: context deadline exceeded
+I0525 06:44:50.640277 PID server.go:2235] Auth succeeded, refreshing features and managers
+I0525 06:44:51.236393 PID http_helpers.go:182] URL: https://cloudcode-pa.googleapis.com/v1internal:loadCodeAssist Trace: ...
+I0525 06:44:51.630791 PID http_helpers.go:182] URL: https://cloudcode-pa.googleapis.com/v1internal:fetchAvailableModels Trace: ...
+I0525 06:44:51.635642 PID server.go:2241] State refresh took 995ms                          ← 1 秒以内
+I0525 06:44:51.637265 PID projects_migration.go:447] Projects migration already started or completed, skipping
+I0525 06:44:51.649356 PID server.go:1109] Serving UI bundle from embedded assets
+I0525 06:44:51.653376 PID server.go:1899] initialized server successfully in 7.696378292s
+I0525 06:44:52.324306 PID http_helpers.go:182] URL: https://cloudcode-pa.googleapis.com/v1internal:loadCodeAssist Trace: ...
+
+# 关键变化:
+# - 端点从 daily-cloudcode-pa 变成 cloudcode-pa（asar 补丁生效）
+# - State refresh 从 10002ms 变成 995ms（TUN 透明转发生效，请求秒回）
+# - 反复看到 loadCodeAssist 调用，但都成功（不再 context deadline exceeded）
+# - initialized successfully 时间从 14.2s 减到 7.7s

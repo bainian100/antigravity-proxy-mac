@@ -1,0 +1,29 @@
+# 修复前的 language_server.log（节选）
+# 来源: ~/Library/Logs/Antigravity/language_server.log
+# 抹掉了 PID、CSRF token、trace ID
+
+I0525 06:14:47.157877 PID server.go:1291] Starting language server process with pid PID
+I0525 06:14:47.158108 PID server.go:328]  Setting GOMAXPROCS to 4
+I0525 06:14:47.158626 PID server.go:471]  Language server will attempt to listen on host localhost
+I0525 06:14:47.160314 PID server.go:485]  Language server listening on random port at XXXXX for HTTPS (gRPC)
+I0525 06:14:47.160718 PID server.go:492]  Language server listening on random port at XXXXX for HTTP
+I0525 06:14:48.366510 PID auth_provider.go:546] [AuthProvider] SetProjectID called with projectID: ""
+I0525 06:14:48.366537 PID auth_provider.go:554] [AuthProvider] SetLocation called with location: ""
+W0525 06:14:48.373688 PID launchmanager.go:68] Entering local chrome mode! This is WRONG unless you are running tests or in eval mode on Linux.
+
+E0525 06:14:51.377653 PID log.go:398] WaitForReady failed: context deadline exceeded
+I0525 06:14:51.378971 PID server.go:2235] Auth succeeded, refreshing features and managers
+
+E0525 06:15:00.849997 PID error_parsing.go:45] Error: Post "https://cloudcode-pa.googleapis.com/v1internal:loadCodeAssist": context deadline exceeded
+E0525 06:15:01.380500 PID log.go:398] Failed to poll ListExperiments: Post "https://cloudcode-pa.googleapis.com/v1internal:listExperiments": context deadline exceeded
+W0525 06:15:01.381288 PID log_context.go:117] Cache(loadCodeAssistResponse): Singleflight refresh failed: Post "https://cloudcode-pa.googleapis.com/v1internal:loadCodeAssist": context deadline exceeded
+W0525 06:15:01.381336 PID log_context.go:117] Cache(availableModels): Singleflight refresh failed: failed to get load code assist response: Post "https://cloudcode-pa.googleapis.com/v1internal:loadCodeAssist": context deadline exceeded
+E0525 06:15:01.381383 PID log.go:398] Failed to poll FetchAvailableModels: failed to get load code assist response: Post "https://cloudcode-pa.googleapis.com/v1internal:loadCodeAssist": context deadline exceeded
+I0525 06:15:01.381585 PID server.go:2241] State refresh took 10002ms                                ← 10 秒超时
+I0525 06:15:01.391964 PID server.go:1109] Serving UI bundle from embedded assets
+I0525 06:15:01.396796 PID server.go:1899] initialized server successfully in 14.238510292s
+
+# 关键特征:
+# - "Auth succeeded" 但 loadCodeAssist 立刻 context deadline exceeded
+# - State refresh took 10002ms（标准 10s 超时上限）
+# - 反复 retry FetchAvailableModels / ListExperiments / loadCodeAssistResponse 都超时

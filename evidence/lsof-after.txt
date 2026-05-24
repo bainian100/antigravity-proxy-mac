@@ -1,0 +1,22 @@
+# 修复后：Antigravity language_server 进程的网络连接（节选）
+# 修复 = asar 补丁 + Clash Verge TUN 模式
+# 关键变化：所有连接都 ESTABLISHED，走代理或走 TUN fake-IP（198.18.0.0/16）
+# 抹掉了具体 PID、端口号、本机 IP
+
+COMMAND   PID  USER   FD   TYPE   DEVICE   NODE NAME
+language_  XX  user   ?u   IPv4   ...      TCP localhost:XXXXX (LISTEN)
+
+# 走代理的连接
+language_  XX  user   ?u   IPv4   ...      TCP localhost:XXXXX->localhost:10808 (ESTABLISHED)
+language_  XX  user   ?u   IPv4   ...      TCP localhost:XXXXX->localhost:10808 (ESTABLISHED)
+language_  XX  user   ?u   IPv4   ...      TCP localhost:XXXXX->localhost:10808 (ESTABLISHED)
+
+# 走 TUN（Mihomo 的 fake-IP 范围 198.18.0.0/16，被 utun 设备透明转发到代理）
+language_  XX  user   ?u   IPv4   ...      TCP 198.18.0.1:XXXXX->198.18.0.5:https (ESTABLISHED)
+language_  XX  user   ?u   IPv4   ...      TCP 198.18.0.1:XXXXX->198.18.0.5:https (ESTABLISHED)
+language_  XX  user   ?u   IPv4   ...      TCP 198.18.0.1:XXXXX->198.18.0.16:https (ESTABLISHED)
+language_  XX  user   ?u   IPv4   ...      TCP 198.18.0.1:XXXXX->198.18.0.22:https (ESTABLISHED)
+
+# 全是 ESTABLISHED，没有 SYN_SENT
+# 198.18.x.x 是 Mihomo 自动分配的 fake-IP，对应被 hijack 的 Google 域名
+# 所有出站包都被 utun 设备截到 Mihomo 内核，按代理规则转发
